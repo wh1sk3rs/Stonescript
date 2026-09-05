@@ -1,0 +1,46 @@
+func equip_melee()
+  equipL sword *9
+  equipR shield *9
+
+func equip_dps()
+  equipL sword *10
+  equipR sword *9
+
+func equip_ranged_healing()
+  equipL crossbow *10
+  equipR ouroboros
+  
+func equip_ranged_shield()
+  equipL crossbow *10
+  equipR shield *9
+
+func equip_armor_piercing()
+  equipL warhammer *9
+  equipR warhammer *8
+
+func AAC()
+  ?item.left.state = 3
+    equipL *0 wand //trash
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield //trash
+    equip @item.right@
+
+func speedwalk()
+  ?foe.distance > 16
+    equipL triskelion
+    ?item.GetCooldown(＂quarterstaff＂) <= 0 &
+    ^item.CanActivate()
+      equip quarterstaff
+      activate R
+    :?pickup.distance <= 22
+      equipR Star Stone
+    :?hp < maxhp
+      equipR Ouroboros
+    :
+      equipR Shield 9*
+  :?foe.distance <= 16 & foe.distance >= 11
+    ?item.GetCooldown(＂dash＂) <= 0
+      equipR dashing shield
+    :?item.GetCooldown(＂bash＂) <= 0
+      equipR bashing shield
