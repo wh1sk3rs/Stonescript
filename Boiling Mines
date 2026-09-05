@@ -1,6 +1,13 @@
-
-//Start Mines
-:?loc = bronze_guardian
+?loc = mine
+  ?foe = master
+  ^ | foe = elemental
+  ^ | foe = geyser
+  ^ | foe = walker
+    ?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_melee()
+?loc = bronze_guardian
   ?time > 600 & foe.distance > 10
     equip_ranged_shield()
   :?foe.distance <= 5
@@ -8,9 +15,3 @@
       equip_armor_piercing()
     :
       equip_dps()
-:	
-  ?foe.armor > 0
-    equip_armor_piercing()
-  :
-    equip_melee()
-//End Mines
