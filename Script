@@ -1,0 +1,159 @@
+//Imports//
+import UI/MindstoneButton
+import UI/CDTime
+var freeChest = import UI/FreeChestTracker
+freeChest.Main()
+
+//Define Functions//
+func equip_melee()
+  equipL Vigor Sword *10
+  equipR compound shield *10
+
+func equip_dps()
+  equipL sword *10
+  equipR sword aether sword
+
+func equip_ranged_healing()
+  equipL crossbow *10
+  equipR ouroboros
+
+func equip_armor_piercing()
+  equip heavy hammer *9
+
+func equip_heal_shield()
+  equipL ouroboros
+  equipR compound shield *10
+
+func AAC()
+  ?item.left.state = 3
+    equipL *0 wand //trash
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield //trash
+    equip @item.right@
+
+func speed_walk()
+  ?foe.distance > 16
+    equipL triskelion
+    ?item.GetCooldown(＂quarterstaff＂) <= 0 &
+    ^item.CanActivate()
+      equip quarterstaff
+      activate R
+    :?pickup.distance <= 22
+      equipR Star Stone  
+    :
+      equipR Shield 9*
+  :?foe.distance <= 16 & foe.distance >= 11
+    ?item.GetCooldown(＂dash＂) <= 0
+      equipR dashing shield
+    :?item.GetCooldown(＂bash＂) <= 0
+      equipR bashing shield
+    :
+      ?totaltime % 2 = 0
+        equipR triskelion
+      :?totaltime % 2 = 1
+        equipR hatchet
+      equipL sword +0 0*
+  :?foe.distance <   11 & foe.distance > 5
+    ?totaltime % 2 = 0
+      equipR triskelion
+    :?totaltime % 2 = 1
+      equipR hatchet
+    equipL sword +0 0*
+  
+
+func crowd_control()
+  ?foe.GetCount(10) > 5 &
+  ^item.GetCooldown(＂blade＂) <= 0  
+    equip blade  
+    activate R
+
+//Automation//
+>@foe.state@:@foe.time@:@foe.distance@
+?hp <= 10
+  activate potion
+AAC()
+crowd_control()
+
+//Temple
+?loc = temple
+  ?foe ! boss 
+    ?foe.distance >= 11
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_melee()
+  :
+    ?foe.state = 1
+      equip_heal_shield()
+    :?foe.distance > 11
+      speed_walk()
+    :?foe.state = 112 & foe.time > 50
+      equip mind stone
+    :
+      equip_dps()
+  
+//Boiling Mine
+?loc = bronze_guardian
+  ?foe.state = 1
+    equip_heal_shield()
+  :?foe.state = 2
+    equip heavy crossbow
+  :?foe.state = 32 & foe.time > 32  
+    equipR mind stone
+  :?foe.state = 33
+    ?foe.distance > 11
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_dps() 
+:?loc = mine  
+  ?foe.distance >= 11
+    speed_walk()
+  :?foe.armor > 0
+    equip_armor_piercing()
+  :
+    equip_melee()
+
+//Caves of Fear//
+?loc = caves
+  ?foe ! boss 
+    ?foe.distance >= 11
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_melee()
+  :
+    ?foe.state = 1 & foe.time < 200
+      equip_heal_shield()
+    :
+      equip heavy crossbow
+  
+//Rocky Plateau//
+?loc = Rocky
+  ?foe.distance > 5 & ai.enabled &
+  ^foe.state ! 115
+    speed_walk()
+  :?foe = dysangelos_bearer
+    equip_dps()
+  :?foe = dysangelos_elementalist
+    equip_dps()
+    ?foe = poison
+      equipR ice sword
+    :?foe = vigor
+      equipR poison sword
+    :?foe = ice
+      equipR fire sword
+  :?foe = dysangelos_perfected
+    ?foe.state = 115 & foe.time > 74
+      equip mind stone
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_dps()
+      ?foe.buffs.string = 
+      ^adaptive_defense_aether
+        equipR poison sword      
