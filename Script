@@ -1,13 +1,13 @@
-//Imports//
+//Imports///////////////////////////////////////
 import UI/MindstoneButton
 import UI/CDTime
 var freeChest = import UI/FreeChestTracker
 freeChest.Main()
 
-//Define Functions//
+//Define Functions//////////////////////////////
 func equip_melee()
   equipL Vigor Sword *10
-  equipR compound shield *10
+  equipR shield *9
 
 func equip_dps()
   equipL sword *10
@@ -22,7 +22,7 @@ func equip_armor_piercing()
 
 func equip_heal_shield()
   equipL ouroboros
-  equipR compound shield *10
+  equipR vigor shield
 
 func AAC()
   ?item.left.state = 3
@@ -42,7 +42,7 @@ func speed_walk()
     :?pickup.distance <= 22
       equipR Star Stone  
     :
-      equipR Shield 9*
+      equipR vigor shield
   :?foe.distance <= 16 & foe.distance >= 11
     ?item.GetCooldown(＂dash＂) <= 0
       equipR dashing shield
@@ -63,19 +63,39 @@ func speed_walk()
   
 
 func crowd_control()
-  ?foe.GetCount(10) > 5 &
+  ?foe.GetCount(20) > 5 &
   ^item.GetCooldown(＂blade＂) <= 0  
     equip blade  
     activate R
 
-//Automation//
->@foe.state@:@foe.time@:@foe.distance@
+func cinderwisp()
+  ?summon.count = 0 &
+  ^ item.CanActivate()
+    equipR fire talisman
+    activate R
+
+
+//Universal/////////////////////////////////////
+>@item.getcooldown(＂ignition＂)@
 ?hp <= 10
   activate potion
 AAC()
 crowd_control()
+?summon.count = 0
+  cinderwisp()
+:
+  ?foe = boss &
+  ^item.getcooldown(＂cinderwisp＂) <= 0
+    ?buffs.getcount(＂ignition＂) >= 10
+      activate cinderwisp
+    :?foe.hp  <= 20 *
+    ^buffs.getcount(＂ignition＂)
+      activate cinderwisp
+      
 
-//Temple
+//QEUSTS////////////////////////////////////////
+
+//Temple////////////////////////////////////////
 ?loc = temple
   ?foe ! boss 
     ?foe.distance >= 11
@@ -93,9 +113,16 @@ crowd_control()
       equip mind stone
     :
       equip_dps()
+
+//Icy Ridge/////////////////////////////////////
+:?loc = ridge
+  ?foe.distance > 5
+    speed_walk()
+  :
+    equip_melee()
   
-//Boiling Mine
-?loc = bronze_guardian
+//Boiling Mine//////////////////////////////////
+:?loc = bronze_guardian
   ?foe.state = 1
     equip_heal_shield()
   :?foe.state = 2
@@ -109,18 +136,25 @@ crowd_control()
       equip_armor_piercing()
     :
       equip_dps() 
-:?loc = mine  
-  ?foe.distance >= 11
+:?loc = mine
+  ?foe.distance > 5
     speed_walk()
   :?foe.armor > 0
     equip_armor_piercing()
   :
     equip_melee()
 
-//Caves of Fear//
-?loc = caves
+//Haunted Halls/////////////////////////////////
+:?loc = halls
+  ?foe.distance > 5
+    speed_walk()
+  :
+    equip ice staff
+
+//Caves of Fear/////////////////////////////////
+:?loc = caves
   ?foe ! boss 
-    ?foe.distance >= 11
+    ?foe.distance > 5
       speed_walk()
     :?foe.armor > 0
       equip_armor_piercing()
@@ -131,29 +165,35 @@ crowd_control()
       equip_heal_shield()
     :
       equip heavy crossbow
+
+//Deadwood Canyon///////////////////////////////
+:?loc = valley
+  ?foe.distance > 5 & ai.enabled
+    speed_walk()
+  :
+    equip_melee()
   
-//Rocky Plateau//
-?loc = Rocky
+//Rocky Plateau/////////////////////////////////
+:?loc = Rocky
   ?foe.distance > 5 & ai.enabled &
   ^foe.state ! 115
     speed_walk()
-  :?foe = dysangelos_bearer
+  :
     equip_dps()
-  :?foe = dysangelos_elementalist
-    equip_dps()
-    ?foe = poison
-      equipR ice sword
-    :?foe = vigor
-      equipR poison sword
-    :?foe = ice
-      equipR fire sword
-  :?foe = dysangelos_perfected
-    ?foe.state = 115 & foe.time > 74
-      equip mind stone
-    :?foe.armor > 0
-      equip_armor_piercing()
-    :
-      equip_dps()
-      ?foe.buffs.string = 
+    ?foe = dysangelos_elementalist
+      ?foe = poison
+        equipR ice sword
+      :?foe = vigor
+        equipR poison sword
+      :?foe = ice
+        equipR fire sword
+    :?foe = dysangelos_perfected
+      ?foe.state = 115 & foe.time > 74
+        equip mind stone
+      :?foe.armor > 0
+        equip_armor_piercing()
+      :?foe.buffs.string = 
       ^adaptive_defense_aether
-        equipR poison sword      
+        equipR poison sword 
+
+//End///////////////////////////////////////////
