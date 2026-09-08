@@ -19,6 +19,9 @@ func equip_ranged_healing()
 
 func equip_armor_piercing()
   equip heavy hammer *9
+  ?item.getcooldown(＂Heavy_hammer＂) <= 0
+  ^& !ai.paused
+    activate R
 
 func equip_heal_shield()
   equipL ouroboros
@@ -61,7 +64,6 @@ func speed_walk()
       equipR hatchet
     equipL sword +0 0*
   
-
 func crowd_control()
   ?foe.GetCount(20) > 5 &
   ^item.GetCooldown(＂blade＂) <= 0  
@@ -74,29 +76,27 @@ func cinderwisp()
     equipR fire talisman
     activate R
 
-
 //Universal/////////////////////////////////////
->@item.getcooldown(＂ignition＂)@
+>@loc.besttime@:@loc.averagetime@:@totaltime@
+^cinderwisp:@item.getcooldown(＂cinderwisp＂)@
+^idle:@ai.idle@
 ?hp <= 10
   activate potion
 AAC()
 crowd_control()
-?summon.count = 0
-  cinderwisp()
-:
-  ?foe = boss &
-  ^item.getcooldown(＂cinderwisp＂) <= 0
-    ?buffs.getcount(＂ignition＂) >= 10
-      activate cinderwisp
-    :?foe.hp  <= 20 *
-    ^buffs.getcount(＂ignition＂)
-      activate cinderwisp
-      
+?summon.count = 0 &
+^item.canactivate()
+  equipR Fire Talisman
+  activate R
+:?foe = boss &
+^foe.debuffs.getcount(＂ignition＂) >= 10 &
+^item.getcooldown(＂cinderwisp＂) <= 0
+  activate cinderwisp
 
 //QEUSTS////////////////////////////////////////
 
 //Temple////////////////////////////////////////
-?loc = temple
+:?loc = temple
   ?foe ! boss 
     ?foe.distance >= 11
       speed_walk()
@@ -184,11 +184,13 @@ crowd_control()
       ?foe = poison
         equipR ice sword
       :?foe = vigor
+        activate cinderwisp
         equipR poison sword
       :?foe = ice
         equipR fire sword
     :?foe = dysangelos_perfected
-      ?foe.state = 115 & foe.time > 74
+      ?foe.state = 115 & foe.time > 75
+      ^&foe.time < 83
         equip mind stone
       :?foe.armor > 0
         equip_armor_piercing()
