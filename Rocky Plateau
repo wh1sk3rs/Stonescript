@@ -1,0 +1,286 @@
+
+
+
+//Imports///////////////////////////////////////
+import UI/MindstoneButton
+import UI/CDTime
+var freeChest = import UI/FreeChestTracker
+freeChest.Main()
+
+//Define Variable & Functions///////////////////
+var attacks = 0
+
+func equip_melee()
+  equipL Big Vigor Sword 10*
+  equipR Compound Shield 10*
+
+func equip_dps()
+  equipL sword 10* Vigor
+  equipR 10* Fire Sword
+
+func equip_vigor_dps()
+  equipL Vigor Sword dL 10*
+  EquipR Vigor Sword D 8*
+
+func equip_fire_dps()
+  equipL Fire Sword dF 10*
+  equipR Fire Sword D 8*
+
+func equip_ice_dps()
+  equipL Ice Sword dI 10*
+  equipR Ice Sword D 7*
+
+func equip_aether_dps()
+  equipL Aether Sword dU 10*
+  equipR Aether Sword D 8*
+
+func equip_poison_dps()
+  equipL Poison Sword dP 10*
+  equipR Poison Sword D 8*
+
+func equip_ranged_healing()
+  equipL crossbow *10
+  equipR ouroboros
+
+func equip_armor_piercing()
+  equipL war hammer 10* +10
+  equipR war hammer 10* +11
+
+func equip_heal_shield()
+  equipL ouroboros
+  equipR vigor shield
+
+func AAC()
+  ?item.left.state = 3
+    equipL *0 wand //trash
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield //trash
+    equip @item.right@
+
+func moonjuggle(itemLeft,itemRight)
+  ?totaltime % 3 = 0
+    equipL @itemLeft@
+    equipR @itemRight@
+  :?totaltime % 3 = 1
+    equipL moon
+    equipR @itemRight@
+  :
+    equipL moon
+    equipR @itemLeft@
+
+func speed_walk()
+  ?foe.distance > 16
+    equipL triskelion
+    ?item.GetCooldown(＂quarterstaff＂) <= 0 &
+    ^item.CanActivate()
+      equip quarterstaff 10*
+      activate R
+    :?pickup.distance <= 22
+      equipR Star Stone  
+    :
+      equipR Compound Shield
+  :?foe.distance <= 16 & foe.distance >= 11
+    ?item.GetCooldown(＂dash＂) <= 0
+      equipR dashing shield
+    :?item.GetCooldown(＂bash＂) <= 0
+      equipR bashing shield
+    :
+      ?totaltime % 2 = 0
+        equipR triskelion
+      :?totaltime % 2 = 1
+        equipR hatchet
+      equipL sword +0 0*
+  :?foe.distance <   11 & foe.distance > 5
+    ?totaltime % 2 = 0
+      equipR triskelion
+    :?totaltime % 2 = 1
+      equipR hatchet
+    equipL sword +0 0*
+  
+func crowd_control()
+  ?foe.count > 5
+    ?item.GetCoolDown(＂voidweaver＂) <= 0
+      activate voidweaver
+    ?item.GetCooldown(＂blade＂) <= 0  
+      equip blade  
+      activate R
+
+func cinderwisp()
+  ?summon.count = 0 &
+  ^ item.CanActivate()
+    equipR fire talisman
+    activate R
+
+//DISPLAY//////////////////////////////////////
+var best_minutes = loc.besttime / 1800
+var best_seconds = (loc.besttime % 1800) / 30
+var avg_minutes = loc.averagetime / 1800
+var avg_seconds = (loc.averagetime % 1800) / 30
+
+>Best:@best_minutes@:@best_seconds@
+^ Average:@avg_minutes@:@avg_seconds@
+^ Current:@totaltime/1800@:@(totaltime%1800)/30@
+^ Foe State & Time:@foe.state@:@foe.time@
+^ Attacks:@attacks@
+//loc.pause()
+
+//Universal/////////////////////////////////////
+
+?hp <= 10
+  activate potion
+AAC()
+crowd_control()
+?summon.count = 0 &
+^item.canactivate()
+  equipR Fire Talisman
+  activate R
+:?foe = boss &
+^foe.debuffs.getcount(＂ignition＂) >= 10 &
+^item.getcooldown(＂cinderwisp＂) <= 0
+  activate cinderwisp
+
+//QEUSTS////////////////////////////////////////
+
+//Temple////////////////////////////////////////
+:?loc = temple
+  ?foe ! boss 
+    ?foe.distance >= 11
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_melee()
+  :
+    ?foe.state = 1
+      equip_heal_shield()
+    :?foe.distance > 11
+      speed_walk()
+    :?foe.state = 112 & foe.time > 50
+      equip mind stone
+    :
+      equip_dps()
+
+//Icy Ridge/////////////////////////////////////
+:?loc = ridge
+  ?foe.distance > 5
+    speed_walk()
+  :
+    moonjuggle(vigor sword , aether sword)
+  
+//Boiling Mine//////////////////////////////////
+:?loc = bronze_guardian
+  ?foe.state = 1
+    equip_heal_shield()
+  :?foe.state = 2
+    equip Aether Crossbow
+  :?foe.state = 32 & foe.time > 32  
+    equipR mind stone
+  :?foe.state = 33
+    ?foe.distance > 11
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_dps() 
+:?loc = mine
+  ?foe.distance > 22
+    speed_walk()
+  :
+    equip Aether Crossbow
+
+//Haunted Halls/////////////////////////////////
+:?loc = halls
+  cinderwisp()
+  ?foe.distance > 16
+    speed_walk()
+  :?foe = immune_to_physical
+    equip Vigor Staff
+  :?foe.armor > 0
+    equip_armor_piercing()
+  :
+    equip_dps()
+
+//Caves of Fear/////////////////////////////////
+:?loc = caves
+  ?foe ! boss 
+    ?foe.distance > 5
+      speed_walk()
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :
+      equip_melee()
+  :
+    ?foe.state = 1 & foe.time < 200
+      equip_heal_shield()
+    :
+      equip repeating crossbow
+
+//Deadwood Canyon///////////////////////////////
+:?loc = valley
+  ?foe ! boss | foe = tree_boss
+    ?foe.distance > 5 & ai.enabled
+      speed_walk()
+    :
+      equip_dps()
+  :?foe = poena
+    equip aether crossbow
+
+  
+//Rocky Plateau/////////////////////////////////
+:?loc = Rocky
+  ?loc.loop
+    attacks = 0
+  ?foe ! dysangelos_perfected
+    ?foe.distance > 5 & ai.enabled
+      speed_walk()
+    :?foe.debuffs.getcount("ignition") >= 10
+    ^& item.getcooldown("cinderwisp") <= 0
+    ^| foe = vigor
+      activate cinderwisp
+    :?foe = poison
+      equip_ice_dps()
+    :?foe = vigor
+      equip_poison_dps()
+    :?foe = aether
+      equip_vigor_dps()
+    :?foe = fire()
+      equip_aether_dps()
+    :?foe = ice()
+      equip_fire_dps()
+    :
+      equip_dps()
+  :
+    ?foe.state = 32 & foe.time = 1
+      attacks ++
+    ?foe.state = 32 & foe.time > 1
+      ?attacks = 3
+        ?item.getcooldown("mind") <= 0
+          equip mind stone
+        :
+          equip heavy hammer 9*
+          activate R
+      :?foe.distance > 5 & ai.enabled
+        speed_walk()
+    :?foe.state = 115 
+      ?foe.time > 70 & foe.time < 80
+        equip mind stone
+      :?foe.distance > 5
+        speed_walk()
+      :
+        equip_dps()
+    :?foe.debuffs.getcount(＂ignition＂) >= 10 &
+    ^item.getcooldown(＂cinderwisp＂) <= 0
+      activate cinderwisp
+    :?foe.armor > 0
+      equip_armor_piercing()
+    :?foe.buffs.string = 
+    ^adaptive_defense_fire
+      equip_vigor_dps()
+    :?foe.buffs.string = 
+    ^adaptive_defense_vigor
+      equip_fire_dps()
+    :
+      equip_dps()
+
+//End///////////////////////////////////////////
