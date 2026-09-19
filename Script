@@ -7,7 +7,9 @@ import UI/CDTime
 var freeChest = import UI/FreeChestTracker
 freeChest.Main()
 
-//Define Functions//////////////////////////////
+//Define Variable & Functions///////////////////
+var attacks = 0
+
 func equip_melee()
   equipL Big Vigor Sword 10*
   equipR Compound Shield 10*
@@ -22,7 +24,7 @@ func equip_vigor_dps()
 
 func equip_fire_dps()
   equipL Fire Sword dF 10*
-  equipR Fire Sword D 8*
+  equipR Fire Sword D 9*
 
 func equip_ice_dps()
   equipL Ice Sword dI 10*
@@ -120,7 +122,8 @@ var avg_seconds = (loc.averagetime % 1800) / 30
 ^ Average:@avg_minutes@:@avg_seconds@
 ^ Current:@totaltime/1800@:@(totaltime%1800)/30@
 ^ Foe State & Time:@foe.state@:@foe.time@
-
+^ Attacks:@attacks@
+//loc.pause()
 
 //Universal/////////////////////////////////////
 
@@ -226,12 +229,15 @@ crowd_control()
   
 //Rocky Plateau/////////////////////////////////
 :?loc = Rocky
+  ?loc.loop
+    attacks = 0
   ?foe.distance > 5 & ai.enabled &
   ^foe.state ! 115 & foe.state ! 32
     speed_walk()
   :
     equip_dps()
     ?foe = dysangelos_elementalist
+      attacks = 0
       ?foe.debuffs.getcount(＂ignition＂) >= 10 &
       ^item.getcooldown(＂cinderwisp＂) <= 0
         activate cinderwisp
@@ -249,23 +255,22 @@ crowd_control()
       :
         equip_dps()
     :?foe = dysangelos_perfected
-      var attacks = 0
       ?foe.state = 32 &
       ^foe.time = 1
         attacks ++
-      ?foe.state = 32
-        ?(attacks + 2) % 5 = 0
-          equip heavy hammer 6*
-          activate R
-      ?foe.state = 115 & foe.time > 60
+      ?foe.state = 32 & foe.time > 1
+        ?attacks = 3
+          ?item.getcooldown(＂mind＂) <= 0
+            equip mind stone
+          :
+            equip heavy hammer 10*
+            activate R
+      :?foe.state = 115 & foe.time > 60
         equip mind stone
+        attacks = 0
       :?foe.debuffs.getcount(＂ignition＂) >= 10 &
       ^item.getcooldown(＂cinderwisp＂) <= 0
         activate cinderwisp
-      :?foe.debuffs.getcount(＂debuff_chill＂)<6
-        equipR ice sword dI 10*
-      :?foe.debuffs.string ! debuffs_fire
-        equipR fire Sword dF 10*
       :?foe.armor > 0
         equip_armor_piercing()
       :?foe.buffs.string = 
